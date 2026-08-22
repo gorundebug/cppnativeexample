@@ -1,0 +1,39 @@
+components_manager:
+  task_processors:
+    main-task-processor:
+      worker_threads: @WORKERS@
+    fs-task-processor:
+      worker_threads: 1
+    grpc-blocking-task-processor:
+      worker_threads: 1
+      thread_name: grpc-worker
+  default_task_processor: main-task-processor
+  components:
+    native-disabled-server-middlewares:
+    logging:
+      fs-task-processor: fs-task-processor
+      loggers:
+        default:
+          file_path: '@stderr'
+          level: none
+          overflow_behavior: discard
+    server:
+      middleware-pipeline-builder: native-disabled-server-middlewares
+      listener:
+        port: 9092
+        task_processor: main-task-processor
+    native-status-handler:
+      path: /status/data
+      method: GET
+      task_processor: main-task-processor
+    native-metrics-handler:
+      path: /metrics
+      method: GET
+      task_processor: main-task-processor
+    grpc-server:
+      port: 9202
+      completion-queue-count: 1
+    grpc-server-middlewares-pipeline:
+    inventory-service-api:
+      task-processor: main-task-processor
+      disable-all-pipeline-middlewares: true

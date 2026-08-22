@@ -1,0 +1,40 @@
+services:
+  inventoryservice:
+    image: cppnativeexample-inventoryservice:latest
+    build:
+      context: .
+      target: inventoryservice
+      args:
+        USERVER_LTO: ${USERVER_LTO:-ON}
+      additional_contexts:
+        userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
+    environment:
+      NATIVE_WORKER_THREADS: ${BENCHMARK_SERVICE_CORES:-2}
+      INVENTORY_SERVICE_RESPONSE_DELAY: ${INVENTORY_SERVICE_RESPONSE_DELAY:-0s}
+    ports:
+      - "9092:9092"
+      - "9202:9202"
+    networks: [app_net]
+
+  orderservice:
+    image: cppnativeexample-orderservice:latest
+    build:
+      context: .
+      target: orderservice
+      args:
+        USERVER_LTO: ${USERVER_LTO:-ON}
+      additional_contexts:
+        userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
+    environment:
+      NATIVE_WORKER_THREADS: ${BENCHMARK_SERVICE_CORES:-2}
+      INVENTORY_SERVICE_API_CONNECTIONS_COUNT: ${INVENTORY_SERVICE_API_CONNECTIONS_COUNT:-1}
+      ORDER_SERVICE_REQUEST_TIMEOUT: ${ORDER_SERVICE_REQUEST_TIMEOUT:-5s}
+      ORDER_SERVICE_SOFT_DEADLINE_MARGIN: ${ORDER_SERVICE_SOFT_DEADLINE_MARGIN:-1s}
+    ports:
+      - "9091:9091"
+    depends_on: [inventoryservice]
+    networks: [app_net]
+
+networks:
+  app_net:
+    driver: bridge

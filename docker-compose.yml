@@ -4,8 +4,16 @@ services:
     build:
       context: .
       target: inventoryservice
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
       args:
         USERVER_LTO: ${USERVER_LTO:-ON}
+        SERVICEGEN_APT_UBUNTU_ARCHIVE_URL: ${SERVICEGEN_APT_UBUNTU_ARCHIVE_URL:-}
+        SERVICEGEN_APT_UBUNTU_SECURITY_URL: ${SERVICEGEN_APT_UBUNTU_SECURITY_URL:-}
+        SERVICEGEN_APT_UBUNTU_PORTS_URL: ${SERVICEGEN_APT_UBUNTU_PORTS_URL:-}
+        SERVICEGEN_CONAN_REMOTE_URL: ${SERVICEGEN_CONAN_REMOTE_URL:-}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
       additional_contexts:
         userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
     environment:
@@ -21,8 +29,16 @@ services:
     build:
       context: .
       target: orderservice
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
       args:
         USERVER_LTO: ${USERVER_LTO:-ON}
+        SERVICEGEN_APT_UBUNTU_ARCHIVE_URL: ${SERVICEGEN_APT_UBUNTU_ARCHIVE_URL:-}
+        SERVICEGEN_APT_UBUNTU_SECURITY_URL: ${SERVICEGEN_APT_UBUNTU_SECURITY_URL:-}
+        SERVICEGEN_APT_UBUNTU_PORTS_URL: ${SERVICEGEN_APT_UBUNTU_PORTS_URL:-}
+        SERVICEGEN_CONAN_REMOTE_URL: ${SERVICEGEN_CONAN_REMOTE_URL:-}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
       additional_contexts:
         userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
     environment:

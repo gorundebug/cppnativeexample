@@ -51,16 +51,23 @@ RUN set -eu; \
     cp -a "$source_dir/." /opt/userver/; \
     rm -rf /tmp/userver-source /tmp/userver-archive
 WORKDIR /workspace
-COPY CMakeLists.txt ./
 COPY conan ./conan
+COPY scripts/conan-configure-remotes.sh scripts/conan-install.sh scripts/run_with_progress.sh ./scripts/
+
+FROM build AS build-dependencies
+RUN --mount=type=cache,id=cppnative-ccache-${TARGETARCH},target=/root/.cache/ccache \
+    --mount=type=cache,id=servicegen-conan2-${TARGETARCH},target=/conan,sharing=locked \
+    ./scripts/run_with_progress.sh "Conan Release install" \
+      ./scripts/conan-install.sh Release /workspace/build/conan-release
+
+FROM build-dependencies AS build-application
+COPY CMakeLists.txt ./
 COPY proto ./proto
 COPY scripts ./scripts
 COPY src ./src
 RUN --mount=type=cache,id=cppnative-ccache-${TARGETARCH},target=/root/.cache/ccache \
     --mount=type=cache,id=servicegen-conan2-${TARGETARCH},target=/conan,sharing=locked \
-    ./scripts/run_with_progress.sh "Conan Release install" \
-      ./scripts/conan-install.sh Release /workspace/build/conan-release \
-    && conan_toolchain="$(cat /workspace/build/conan-release/toolchain.path)" \
+    conan_toolchain="$(cat /workspace/build/conan-release/toolchain.path)" \
     && ./scripts/run_with_progress.sh "Release configure" \
       cmake -S . -B build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
@@ -109,10 +116,10 @@ COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint
 
 FROM runtime AS inventoryservice
 COPY config/inventory.static_config.yaml /app/config/inventory.static_config.yaml
-COPY --from=build /workspace/build/inventoryservice /usr/local/bin/inventoryservice
+COPY --from=build-application /workspace/build/inventoryservice /usr/local/bin/inventoryservice
 ENTRYPOINT ["/usr/local/bin/entrypoint", "inventory"]
 
 FROM runtime AS orderservice
 COPY config/orders.static_config.yaml /app/config/orders.static_config.yaml
-COPY --from=build /workspace/build/orderservice /usr/local/bin/orderservice
+COPY --from=build-application /workspace/build/orderservice /usr/local/bin/orderservice
 ENTRYPOINT ["/usr/local/bin/entrypoint", "orders"]

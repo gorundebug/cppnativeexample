@@ -13,16 +13,7 @@ if(SERVICEGEN_USE_CCACHE AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
     message(STATUS "C++ compiler cache: ${SERVICEGEN_CCACHE_PROGRAM}")
   endif()
 endif()
-set(USERVER_SOURCE_DIR "/opt/userver" CACHE PATH "userver source checkout")
-
-set(USERVER_FEATURE_GRPC ON CACHE BOOL "" FORCE)
-set(USERVER_FORCE_DOWNLOAD_GRPC OFF CACHE BOOL "" FORCE)
-set(USERVER_FORCE_DOWNLOAD_PROTOBUF OFF CACHE BOOL "" FORCE)
-set(USERVER_FEATURE_OTLP OFF CACHE BOOL "" FORCE)
-set(USERVER_FEATURE_CHAOTIC_EXPERIMENTAL OFF CACHE BOOL "" FORCE)
-add_subdirectory("${USERVER_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/userver" EXCLUDE_FROM_ALL)
-userver_setup_environment()
-list(APPEND CMAKE_MODULE_PATH "${USERVER_SOURCE_DIR}/cmake")
+find_package(userver CONFIG REQUIRED COMPONENTS core grpc)
 include(UserverGrpcTargets)
 
 set(GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
@@ -34,7 +25,7 @@ userver_add_grpc_library(native_inventory_api
       proto/processorderitem.proto)
 
 add_executable(inventoryservice src/inventoryservice.cpp)
-target_link_libraries(inventoryservice PRIVATE userver-core userver-grpc native_inventory_api)
+target_link_libraries(inventoryservice PRIVATE userver::core userver::grpc native_inventory_api)
 
 add_executable(orderservice src/orderservice.cpp)
-target_link_libraries(orderservice PRIVATE userver-core userver-grpc native_inventory_api)
+target_link_libraries(orderservice PRIVATE userver::core userver::grpc native_inventory_api)

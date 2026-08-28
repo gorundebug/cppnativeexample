@@ -2,6 +2,8 @@
 set -euo pipefail
 
 root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+source "$root/scripts/conan-cache-guard.sh"
+dependency_conan_cache_guard "$0" "$@"
 userver_dir="${USERVER_SOURCE_DIR:-/opt/userver}"
 build_type="${1:-Release}"
 output_dir="${2:-$root/build/conan-${build_type,,}}"
@@ -34,8 +36,9 @@ version() {
   python3 "$root/conan/dependencies_generated.py" "$1"
 }
 
-effective_profile="$output_dir/cppnative-userver.profile"
 mkdir -p "$output_dir"
+output_dir="$(CDPATH= cd -- "$output_dir" && pwd)"
+effective_profile="$output_dir/cppnative-userver.profile"
 cp "$profile" "$effective_profile"
 cat "$root/conan/userver-options.generated.profile" >>"$effective_profile"
 cat >>"$effective_profile" <<EOF
@@ -43,7 +46,7 @@ cat >>"$effective_profile" <<EOF
 [replace_requires]
 boost/*: boost/$(version userver-boost)
 grpc/*: grpc/$(version grpc)
-googleapis/*: googleapis/$(version userver-googleapis)
+googleapis/*: googleapis/$(version userver-googleapis)@gorundebug/userver
 gtest/*: gtest/$(version userver-googletest)
 librdkafka/*: librdkafka/$(version librdkafka)
 opentelemetry-proto/*: opentelemetry-proto/$(version userver-opentelemetry-proto)
@@ -56,7 +59,8 @@ protobuf/*: protobuf/$(version protobuf)
 EOF
 
 "$root/scripts/conan-configure-remotes.sh"
-conan export "$root/conan/recipes/googleapis"
+conan export "$root/conan/recipes/googleapis" --user gorundebug --channel userver
+"$root/scripts/conan-export-userver.sh" "$userver_dir" "$(version userver)"
 
 source_download_cache="${CPPNATIVE_CONAN_SOURCE_CACHE:-$(conan config home)/source-download-cache}"
 mkdir -p "$source_download_cache"
@@ -70,61 +74,41 @@ if [[ "$lockfile" != "none" ]]; then
   lock_args=(--lockfile "$lockfile")
 fi
 
-conan install "$userver_dir" \
-  --profile:host "$effective_profile" \
-  --profile:build "$effective_profile" \
-  -s:h "build_type=$build_type" \
-  -s:b "build_type=$build_type" \
-  -o "&:with_mongodb=False" \
-  -o "&:with_postgresql=False" \
-  -o "&:with_redis=False" \
-  -o "&:with_clickhouse=False" \
-  -o "&:with_rabbitmq=False" \
-  -o "&:with_sqlite=False" \
-  -o "&:with_s3api=False" \
-  -o "&:with_easy=False" \
-  -o "&:with_grpc=True" \
-  -o "&:with_kafka=False" \
-  -o "&:with_otlp=False" \
-  -o "&:with_utest=False" \
-  -o "&:with_grpc_reflection=False" \
-  -o "&:with_grpc_protovalidate=False" \
-  --build=missing \
-  -cc "core.sources:download_cache=$source_download_cache" \
-  -c "tools.cmake.cmaketoolchain:user_presets=" \
-  "${lock_args[@]}" \
-  --output-folder="$output_dir" \
-  "${@:3}"
+(
+  # Keep every Conan-generated consumer file in the writable build tree.
+  cd "$output_dir"
+  conan install --requires="userver/$(version userver)@gorundebug/userver" \
+    --profile:host "$effective_profile" \
+    --profile:build "$effective_profile" \
+    -s:h "build_type=$build_type" \
+    -s:b "build_type=$build_type" \
+    -o "userver/*:with_mongodb=False" \
+    -o "userver/*:with_postgresql=False" \
+    -o "userver/*:with_redis=False" \
+    -o "userver/*:with_clickhouse=False" \
+    -o "userver/*:with_rabbitmq=False" \
+    -o "userver/*:with_sqlite=False" \
+    -o "userver/*:with_s3api=False" \
+    -o "userver/*:with_easy=False" \
+    -o "userver/*:with_grpc=True" \
+    -o "userver/*:with_kafka=True" \
+    -o "userver/*:with_otlp=True" \
+    -o "userver/*:with_utest=True" \
+    -o "userver/*:with_grpc_reflection=False" \
+    -o "userver/*:with_grpc_protovalidate=False" \
+    --build=missing \
+    -cc "core.sources:download_cache=$source_download_cache" \
+    -c "tools.cmake.cmaketoolchain:user_presets=$output_dir/CMakeUserPresets.json" \
+    -g CMakeDeps \
+    -g CMakeToolchain \
+    "${lock_args[@]}" \
+    --output-folder="$output_dir" \
+    "${@:3}"
+)
 
-mapfile -t toolchains < <(find "$output_dir" -type f \
-  -name conan_toolchain.cmake -print)
-if [[ "${#toolchains[@]}" -ne 1 ]]; then
-  echo "expected exactly one Conan toolchain below $output_dir, found ${#toolchains[@]}" >&2
+toolchain="$output_dir/conan_toolchain.cmake"
+if [[ ! -f "$toolchain" ]]; then
+  echo "Conan toolchain is missing: $toolchain" >&2
   exit 2
 fi
-generator_dir="$(dirname "${toolchains[0]}")"
-preset_file="$generator_dir/CMakePresets.json"
-python3 - "$preset_file" "${toolchains[0]}" "conan-${build_type,,}" <<'PY'
-import json
-import sys
-
-preset_path, toolchain_path, preset_name = sys.argv[1:]
-with open(preset_path, encoding="utf-8") as source:
-    document = json.load(source)
-preset = next(
-    (item for item in document.get("configurePresets", [])
-     if item.get("name") == preset_name),
-    None,
-)
-if preset is None:
-    raise SystemExit(f"Conan configure preset is missing: {preset_name}")
-with open(toolchain_path, "a", encoding="utf-8") as toolchain:
-    toolchain.write("\n# Cache variables emitted by userver's Conan recipe.\n")
-    for name, value in sorted(preset.get("cacheVariables", {}).items()):
-        toolchain.write(
-            f"set({name} {json.dumps(str(value))} CACHE STRING "
-            '"Generated by userver Conan" FORCE)\n'
-        )
-PY
-
-printf '%s\n' "${toolchains[0]}" >"$output_dir/toolchain.path"
+printf '%s\n' "$toolchain" >"$output_dir/toolchain.path"

@@ -50,6 +50,7 @@ RUN set -eu; \
     mkdir -p /opt/userver; \
     cp -a "$source_dir/." /opt/userver/; \
     rm -rf /tmp/userver-source /tmp/userver-archive
+ENV USERVER_SOURCE_DIR=/opt/userver
 WORKDIR /workspace
 COPY conan ./conan
 COPY scripts/conan-configure-remotes.sh scripts/conan-install.sh scripts/run_with_progress.sh ./scripts/

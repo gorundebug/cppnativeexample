@@ -53,7 +53,9 @@ RUN set -eu; \
 ENV USERVER_SOURCE_DIR=/opt/userver
 WORKDIR /workspace
 COPY conan ./conan
-COPY scripts/conan-configure-remotes.sh scripts/conan-install.sh scripts/run_with_progress.sh ./scripts/
+COPY scripts/conan-cache-guard.sh scripts/conan-configure-remotes.sh \
+     scripts/conan-export-userver.sh scripts/conan-install.sh \
+     scripts/run_with_progress.sh ./scripts/
 
 FROM build AS build-dependencies
 RUN --mount=type=cache,id=cppnative-ccache-${TARGETARCH},target=/root/.cache/ccache \

@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1
+ARG DEPENDENCY_DOCKER_REGISTRY=docker.io
 FROM userver-source AS userver-source
-FROM ubuntu:24.04 AS build
+FROM ${DEPENDENCY_DOCKER_REGISTRY}/library/ubuntu:24.04 AS build
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TARGETARCH
 ARG USERVER_LTO=ON
@@ -78,7 +78,7 @@ RUN --mount=type=cache,id=cppnative-ccache-${TARGETARCH},target=/root/.cache/cca
     && ./scripts/run_with_progress.sh "Release build" \
       cmake --build build --target inventoryservice orderservice --parallel
 
-FROM ubuntu:24.04 AS runtime
+FROM ${DEPENDENCY_DOCKER_REGISTRY}/library/ubuntu:24.04 AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TARGETARCH
 ARG SERVICEGEN_APT_UBUNTU_ARCHIVE_URL=

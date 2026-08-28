@@ -7,6 +7,7 @@ services:
       extra_hosts:
         - "host.docker.internal:host-gateway"
       args:
+        DEPENDENCY_DOCKER_REGISTRY: ${DEPENDENCY_DOCKER_REGISTRY:-docker.io}
         USERVER_LTO: ${USERVER_LTO:-ON}
         SERVICEGEN_APT_UBUNTU_ARCHIVE_URL: ${SERVICEGEN_APT_UBUNTU_ARCHIVE_URL:-}
         SERVICEGEN_APT_UBUNTU_SECURITY_URL: ${SERVICEGEN_APT_UBUNTU_SECURITY_URL:-}
@@ -32,6 +33,7 @@ services:
       extra_hosts:
         - "host.docker.internal:host-gateway"
       args:
+        DEPENDENCY_DOCKER_REGISTRY: ${DEPENDENCY_DOCKER_REGISTRY:-docker.io}
         USERVER_LTO: ${USERVER_LTO:-ON}
         SERVICEGEN_APT_UBUNTU_ARCHIVE_URL: ${SERVICEGEN_APT_UBUNTU_ARCHIVE_URL:-}
         SERVICEGEN_APT_UBUNTU_SECURITY_URL: ${SERVICEGEN_APT_UBUNTU_SECURITY_URL:-}

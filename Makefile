@@ -1,8 +1,8 @@
 .PHONY: docker-build docker-up docker-down conan-lock clean
 
 docker-build:
-	@./scripts/docker-build-target.sh inventoryservice cppnativeexample-inventoryservice:latest
-	@./scripts/docker-build-target.sh orderservice cppnativeexample-orderservice:latest
+	@./scripts/docker-build-target.sh inventoryservice cppnativeexample-inventoryservice:local
+	@./scripts/docker-build-target.sh orderservice cppnativeexample-orderservice:local
 
 docker-up: docker-build
 	@bash -c 'source scripts/dependency-proxy-env.sh && docker compose up -d --no-build'

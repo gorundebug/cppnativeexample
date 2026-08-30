@@ -1,6 +1,6 @@
 services:
   inventoryservice:
-    image: cppnativeexample-inventoryservice:latest
+    image: cppnativeexample-inventoryservice:local
     build:
       context: .
       target: inventoryservice
@@ -26,7 +26,7 @@ services:
     networks: [app_net]
 
   orderservice:
-    image: cppnativeexample-orderservice:latest
+    image: cppnativeexample-orderservice:local
     build:
       context: .
       target: orderservice

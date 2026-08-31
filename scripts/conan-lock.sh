@@ -19,7 +19,10 @@ version() {
 
 "$root/scripts/conan-configure-remotes.sh"
 conan export "$root/conan/recipes/googleapis" --user gorundebug --channel userver
+conan export "$root/conan/recipes/librdkafka" \
+  --version "$(version librdkafka)" --user gorundebug --channel userver
 "$root/scripts/conan-export-userver.sh" "$userver_dir" "$(version userver)"
+source "$root/scripts/conan-userver-package-args.sh"
 mkdir -p "$root/conan/locks"
 
 for profile in "$root"/conan/profiles/*; do
@@ -34,7 +37,7 @@ boost/*: boost/$(version userver-boost)
 grpc/*: grpc/$(version grpc)
 googleapis/*: googleapis/$(version userver-googleapis)@gorundebug/userver
 gtest/*: gtest/$(version userver-googletest)
-librdkafka/*: librdkafka/$(version librdkafka)
+librdkafka/*: librdkafka/$(version librdkafka)@gorundebug/userver
 opentelemetry-proto/*: opentelemetry-proto/$(version userver-opentelemetry-proto)
 protobuf/*: protobuf/$(version protobuf)
 re2/*: re2/$(version re2)
@@ -60,5 +63,8 @@ EOF
     -o "userver/*:with_utest=True" \
     -o "userver/*:with_grpc_reflection=False" \
     -o "userver/*:with_grpc_protovalidate=False" \
+    "${userver_package_args[@]}" \
+    -o:h "openssl/*:no_engine=False" \
+    -o:b "openssl/*:no_engine=False" \
     --lockfile-out "$root/conan/locks/$(basename "$profile").lock"
 done

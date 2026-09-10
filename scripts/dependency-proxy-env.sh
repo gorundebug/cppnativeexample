@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+dependency_script_root="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${dependency_script_root}/scripts/userver-source.generated.env"
+
+if [[ -z "${USERVER_SOURCE_CONTEXT:-}" ]]; then
+  export USERVER_SOURCE_CONTEXT="${USERVER_REPOSITORY}#${USERVER_REVISION}"
+fi
+
 if [[ -n "${DEPENDENCY_PROXY_DIR:-}" ]]; then
   proxy_client_host="${DEPENDENCY_PROXY_HOST:-localhost}"
   proxy_host="${DEPENDENCY_PROXY_DOCKER_HOST:-host.docker.internal}"
@@ -14,5 +21,9 @@ if [[ -n "${DEPENDENCY_PROXY_DIR:-}" ]]; then
   export DEPENDENCY_APT_UBUNTU_ARCHIVE_URL="${proxy_base}/apt-ubuntu-archive"
   export DEPENDENCY_APT_UBUNTU_SECURITY_URL="${proxy_base}/apt-ubuntu-security"
   export DEPENDENCY_APT_UBUNTU_PORTS_URL="${proxy_base}/apt-ubuntu-ports"
-  export USERVER_SOURCE_CONTEXT="${USERVER_SOURCE_CONTEXT:-${proxy_base}/github-raw/userver-framework/userver/archive/c9f77729c0edce7e423def2d4a4450aa7fc9d259.tar.gz}"
+  git_mirror_port="${DEPENDENCY_GIT_MIRROR_PORT:-18084}"
+  git_mirror_base="http://${proxy_host}:${git_mirror_port}/cgi-bin/git"
+  if [[ "${USERVER_SOURCE_CONTEXT}" == "${USERVER_REPOSITORY}#${USERVER_REVISION}" ]]; then
+    export USERVER_SOURCE_CONTEXT="${git_mirror_base}/${USERVER_MIRROR_REPOSITORY}#${USERVER_REVISION}"
+  fi
 fi

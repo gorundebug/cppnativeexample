@@ -6,7 +6,7 @@ target="${1:?Docker target is required}"
 tag="${2:?image tag is required}"
 
 source "$root/scripts/dependency-proxy-env.sh"
-userver_source_context="${USERVER_SOURCE_CONTEXT:-$root/../userver}"
+userver_source_context="${USERVER_SOURCE_CONTEXT:?dependency-proxy-env.sh did not initialize USERVER_SOURCE_CONTEXT}"
 exec docker build \
   --add-host host.docker.internal:host-gateway \
   --build-context "userver-source=$userver_source_context" \

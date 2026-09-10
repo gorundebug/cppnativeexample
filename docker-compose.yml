@@ -16,7 +16,7 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
         PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
       additional_contexts:
-        userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
+        userver-source: ${USERVER_SOURCE_CONTEXT:?initialize it with scripts/dependency-proxy-env.sh}
     environment:
       NATIVE_WORKER_THREADS: ${BENCHMARK_SERVICE_CORES:-2}
       INVENTORY_SERVICE_RESPONSE_DELAY: ${INVENTORY_SERVICE_RESPONSE_DELAY:-0s}
@@ -42,7 +42,7 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
         PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
       additional_contexts:
-        userver-source: ${USERVER_SOURCE_CONTEXT:-../userver}
+        userver-source: ${USERVER_SOURCE_CONTEXT:?initialize it with scripts/dependency-proxy-env.sh}
     environment:
       NATIVE_WORKER_THREADS: ${BENCHMARK_SERVICE_CORES:-2}
       INVENTORY_SERVICE_API_CONNECTIONS_COUNT: ${INVENTORY_SERVICE_API_CONNECTIONS_COUNT:-1}

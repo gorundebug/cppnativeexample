@@ -33,10 +33,12 @@ for profile in "$root"/conan/profiles/*; do
   cat >>"$effective_profile" <<EOF
 
 [replace_requires]
+abseil/*: abseil/$(version abseil)
 boost/*: boost/$(version userver-boost)
 grpc/*: grpc/$(version grpc)
 googleapis/*: googleapis/$(version userver-googleapis)@gorundebug/userver
 gtest/*: gtest/$(version userver-googletest)
+liburing/*: liburing/$(version liburing)
 librdkafka/*: librdkafka/$(version librdkafka)@gorundebug/userver
 opentelemetry-proto/*: opentelemetry-proto/$(version userver-opentelemetry-proto)
 openssl/*: openssl/$(version openssl)

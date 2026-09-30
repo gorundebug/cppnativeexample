@@ -1,5 +1,3 @@
-#include "common.hpp"
-
 #include <atomic>
 #include <memory>
 #include <string>
@@ -10,8 +8,9 @@
 #include <userver/engine/sleep.hpp>
 #include <userver/ugrpc/server/component_list.hpp>
 #include <userver/utils/daemon_run.hpp>
-
 #include <proto/inventoryserviceapi_service.usrv.pb.hpp>
+
+#include "common.hpp"
 
 namespace native_example {
 

@@ -1,14 +1,11 @@
-#include "common.hpp"
-
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
 #include <chrono>
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <userver/components/minimal_server_component_list.hpp>
 #include <userver/engine/deadline.hpp>
 #include <userver/formats/json.hpp>
@@ -23,8 +20,9 @@
 #include <userver/ugrpc/client/simple_client_component.hpp>
 #include <userver/utils/daemon_run.hpp>
 #include <userver/utils/datetime.hpp>
-
 #include <proto/inventoryserviceapi_client.usrv.pb.hpp>
+
+#include "common.hpp"
 
 namespace native_example {
 
